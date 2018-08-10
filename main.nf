@@ -44,10 +44,10 @@ def helpMessage() {
 
     The typical command for running the pipeline is as follows:
 
-    nextflow run nf-core/smrnaseq --reads '*.fastq.gz' --genome GRCh37
+    nextflow run nf-core/smrnaseq --reads_folder '*.fastq.gz' --genome GRCh37
 
     Mandatory arguments:
-      --reads                       Path to input data (must be surrounded with quotes).
+      --reads_folder                       Path to input data folder
                                     NOTE! Paired-end data is NOT supported by this pipeline! For paired-end data, use Read 1 only.
       --genome                      Name of iGenomes reference
                                     NOTE! With the option --genome 'ALL', the entire dataset of mature miRNAs and hairpins
@@ -76,7 +76,9 @@ def helpMessage() {
 /*
  * SET UP CONFIGURATION VARIABLES
  */
-
+params.reads_folder = ""
+params.reads_extension = "fastq.gz"
+ 
 // Show help emssage
 params.help = false
 if (params.help){
@@ -122,6 +124,7 @@ if( !(workflow.runName ==~ /[a-z]+_[a-z]+/) ){
 /*
  * Create a channel for input read files
  */
+$reads_files="${params.reads_folder}/*.${params.reads_extension}"
 if(params.readPaths){
     Channel
         .from(params.readPaths)
@@ -130,8 +133,8 @@ if(params.readPaths){
         .into { raw_reads_fastqc; raw_reads_trimgalore }
 } else {
     Channel
-        .fromPath( params.reads )
-        .ifEmpty { exit 1, "Cannot find any reads matching: ${params.reads}" }
+        .fromPath( $reads_files )
+        .ifEmpty { exit 1, "Cannot find any reads matching: ${reads_files}" }
         .into { raw_reads_fastqc; raw_reads_trimgalore }
 }
 
@@ -148,7 +151,7 @@ nf-core/smrnaseq : Small RNA-Seq Best Practice v${params.version}
 ======================================================="""
 def summary = [:]
 summary['Run Name']            = custom_runName ?: workflow.runName
-summary['Reads']               = params.reads
+summary['Reads']               = $reads_files
 summary['Genome']              = params.genome
 summary['Trim min length']     = params.length
 summary["Trim 5' R1"]          = params.clip_R1
