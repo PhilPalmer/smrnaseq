@@ -544,6 +544,7 @@ process multiqc {
     file ('fastqc/*') from fastqc_results.toList()
     file ('trim_galore/*') from trimgalore_results.toList()
     file ('software_versions/*') from software_versions_yaml.toList()
+    file multiqc_config
 
     output:
     file '*multiqc_report.html' into multiqc_html
